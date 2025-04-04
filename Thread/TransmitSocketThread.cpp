@@ -1,8 +1,8 @@
-#include "TxThread.h"
+#include "TransmitSocketThread.h"
 
 #include "Wrapper_AsioUdp.h"
 
-void TxThread::run() {
+void TransmitSocketThread::run() {
     auto udp = Wrapper_AsioUdp(socketInfo);
 
     const double data {1.5678};

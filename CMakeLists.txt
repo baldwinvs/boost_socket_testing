@@ -13,10 +13,10 @@ add_executable(boost_socket_testing
     main.cpp
     Thread/ThreadBase.cpp
     Thread/ThreadBase.h
-    Thread/RxThread.cpp
-    Thread/RxThread.h
-    Thread/TxThread.cpp
-    Thread/TxThread.h
+    Thread/ReceiveSocketThread.cpp
+    Thread/ReceiveSocketThread.h
+    Thread/TransmitSocketThread.cpp
+    Thread/TransmitSocketThread.h
     Thread/SocketInfo.h
     Thread/Wrapper_AsioUdp.cpp
     Thread/Wrapper_AsioUdp.h
