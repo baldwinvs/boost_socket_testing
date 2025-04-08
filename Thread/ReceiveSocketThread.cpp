@@ -5,16 +5,13 @@
 
 void ReceiveSocketThread::receiveCallback(const size_t bytes)
 {
-    if (bytes > 0) {
-        std::cout << "buffer = " << "0x";
-        for (size_t i = 0; i < bytes; i++) {
-            auto byte = static_cast<unsigned char>(buf[i]);
-            std::cout << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(byte);
-        }
-        std::cout << std::endl;
+    std::cout << "buffer = " << "0x";
+    for (size_t i = 0; i < bytes; i++) {
+        auto byte = static_cast<unsigned char>(buf[i]);
+        std::cout << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(byte);
     }
+    std::cout << std::endl;
 }
-
 
 void ReceiveSocketThread::run()
 {
