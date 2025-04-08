@@ -21,21 +21,16 @@ public:
 private:
 	void receiveCallback(const size_t bytes) override
 	{
-		std::cout << "buffer = " << "0x";
-		for (size_t i = 0; i < bytes; i++) {
-			auto byte = static_cast<unsigned char>(buf[i]);
-			std::cout << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(byte);
-		}
-		std::cout << std::endl;
+		ReceiveSocketThread::receiveCallback(bytes);
 		std::cout << __PRETTY_FUNCTION__ << " received " << std::dec << bytes << " bytes" << std::endl;
 	}
 };
 
 int main() {
-    const SocketInfo transmitInfo {address, port, false, false, bufSize};
-    const SocketInfo receiveInfo {address, port, true, true, bufSize};
+    const SocketInfo transmitInfo {address, port, SocketType::tcp, false, false, bufSize};
+    const SocketInfo receiveInfo {address, port, SocketType::tcp, true, true, bufSize};
 
-    TransmitSocketThread tx(transmitInfo, std::chrono::milliseconds{100});
+    TransmitSocketThread tx(transmitInfo, std::chrono::milliseconds{16});
     CustomReceiverSocket rx(receiveInfo);
 
     rx.start();

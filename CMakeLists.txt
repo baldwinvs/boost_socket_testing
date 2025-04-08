@@ -17,11 +17,15 @@ add_executable(boost_socket_testing
     Thread/ReceiveSocketThread.h
     Thread/TransmitSocketThread.cpp
     Thread/TransmitSocketThread.h
-    Thread/SocketInfo.h
-    Thread/Wrapper_AsioUdp.cpp
-    Thread/Wrapper_AsioUdp.h
+    Socket/SocketInfo.h
+    Socket/Wrapper_AsioUdp.cpp
+    Socket/Wrapper_AsioUdp.h
     Thread/SocketThread.cpp
     Thread/SocketThread.h
+    Socket/Wrapper_AsioTcp.cpp
+    Socket/Wrapper_AsioTcp.h
+    Socket/Base_AsioSocket.cpp
+    Socket/Base_AsioSocket.h
 )
 
 target_link_libraries(boost_socket_testing PRIVATE

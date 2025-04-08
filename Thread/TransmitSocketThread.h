@@ -2,6 +2,8 @@
 #define TRANSMITSOCKETTHREAD_H
 
 #include "SocketThread.h"
+#include "../Socket/Wrapper_AsioTcp.h"
+#include "../Socket/Wrapper_AsioUdp.h"
 #include <chrono>
 
 class TransmitSocketThread : public SocketThread
@@ -9,7 +11,7 @@ class TransmitSocketThread : public SocketThread
 public:
     TransmitSocketThread(const SocketInfo& socketInfo, const std::chrono::milliseconds sleep_time)
         : SocketThread {socketInfo}
-    , sleep_time {sleep_time}
+        , sleep_time {sleep_time}
     {}
 
     ~TransmitSocketThread() override = default;

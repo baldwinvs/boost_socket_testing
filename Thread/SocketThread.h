@@ -1,7 +1,7 @@
 #ifndef SOCKETTHREAD_H
 #define SOCKETTHREAD_H
 
-#include "SocketInfo.h"
+#include "../Socket/Base_AsioSocket.h"
 #include "ThreadBase.h"
 #include <memory>
 
@@ -12,8 +12,10 @@ public:
     ~SocketThread() override;
 
 protected:
+    void createSocket();
     const SocketInfo socketInfo;
     std::unique_ptr<unsigned char[]> buf;
+    std::unique_ptr<Base_AsioSocket> socket;
 };
 
 #endif //SOCKETTHREAD_H
