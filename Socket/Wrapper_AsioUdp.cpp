@@ -36,11 +36,11 @@ size_t Wrapper_AsioUdp::recv(unsigned char* buf)
             bytesReceived = socket.receive_from(boost::asio::buffer(buf, socketInfo.bufferSize), endpoint, 0, error);
 
             if (error == boost::asio::error::would_block) {
-                //do nothing
+                // No data available right now — this is expected in non-blocking mode
             } else if (error) {
                 std::cerr << "Receive error: " << error.message() << std::endl;
             } else {
-                std::cerr << "Received " << bytesReceived << std::endl;
+                // Success! Process the `bytes_read` of data in `buffer`
             }
         }
         else {

@@ -26,6 +26,7 @@ add_executable(boost_socket_testing
     Socket/Wrapper_AsioTcp.h
     Socket/Base_AsioSocket.cpp
     Socket/Base_AsioSocket.h
+    Utility/ObserverPtr.h
 )
 
 target_link_libraries(boost_socket_testing PRIVATE

@@ -2,6 +2,7 @@
 #define WRAPPER_ASIOTCP_H
 
 #include "Base_AsioSocket.h"
+#include "../Utility/ObserverPtr.h"
 #include <memory>
 
 #include <boost/asio/io_context.hpp>
@@ -14,16 +15,16 @@ public:
     ~Wrapper_AsioTcp();
 
     void connect();
-    boost::asio::ip::tcp::socket* get_socket() { return socket.get(); }
+    FixedObserverPtr<boost::asio::ip::tcp::socket> get_socket();
 
     size_t send(const unsigned char* const buf) override;
     size_t recv(unsigned char* buf) override;
+    size_t send(ImmutableObserverPtr<unsigned char> buf);
+    size_t recv(MutableObserverPtr<unsigned char> buf);
 
 private:
-    // The socket is a pointer because it can't be properly initialized until
-    // the body of the constructor (or later?)
-    // NOTE: Could make a connect function that will perform the operation later.
-    std::unique_ptr<boost::asio::ip::tcp::socket> socket;
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 #endif //WRAPPER_ASIOTCP_H

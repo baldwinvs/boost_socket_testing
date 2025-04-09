@@ -27,8 +27,8 @@ private:
 };
 
 int main() {
-    const SocketInfo transmitInfo {address, port, SocketType::tcp, false, false, bufSize};
-    const SocketInfo receiveInfo {address, port, SocketType::tcp, true, true, bufSize};
+    const SocketInfo transmitInfo {address, port, SocketType::udp, false, false, bufSize};
+    const SocketInfo receiveInfo {address, port, SocketType::udp, true, true, bufSize};
 
     TransmitSocketThread tx(transmitInfo, std::chrono::milliseconds{16});
     CustomReceiverSocket rx(receiveInfo);
