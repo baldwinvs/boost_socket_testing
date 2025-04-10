@@ -12,7 +12,7 @@ public:
         : SocketThread {socketInfo}
     {}
 
-    ~ReceiveSocketThread() override = default;
+    ~ReceiveSocketThread() override;
 protected:
     virtual void receiveCallback(const size_t bytes);
 

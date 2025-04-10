@@ -13,12 +13,18 @@ SocketThread::~SocketThread() = default;
 
 void SocketThread::createSocket()
 {
-    switch (socketInfo.type) {
-        case SocketType::udp:
-            socket = std::make_unique<Wrapper_AsioUdp>(socketInfo);
+    switch (socketInfo.properties) {
+    case SocketProperties::udp_receive_blocking:
+    case SocketProperties::udp_receive_nonblocking:
+    case SocketProperties::udp_send_blocking:
+    case SocketProperties::udp_send_nonblocking:
+        socket = std::make_unique<Wrapper_AsioUdp>(socketInfo);
         break;
-        case SocketType::tcp:
-            socket = std::make_unique<Wrapper_AsioTcp>(socketInfo);
+    case SocketProperties::tcp_receive_blocking:
+    case SocketProperties::tcp_receive_nonblocking:
+    case SocketProperties::tcp_send_blocking:
+    case SocketProperties::tcp_send_nonblocking:
+        socket = std::make_unique<Wrapper_AsioTcp>(socketInfo);
         break;
     }
 }

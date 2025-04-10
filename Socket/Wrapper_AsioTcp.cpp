@@ -6,6 +6,14 @@
 #include <iostream>
 #include <string>
 
+namespace
+{
+inline size_t capSize(const size_t size, const size_t max)
+{
+    return (size > max) ? max : size;
+}
+}
+
 struct Wrapper_AsioTcp::Impl
 {
     explicit Impl(Wrapper_AsioTcp *const tcp) : tcpObserver{tcp}
@@ -23,10 +31,10 @@ struct Wrapper_AsioTcp::Impl
     FixedObserverPtr<Wrapper_AsioTcp> tcpObserver;
     void connect_receive();
     void connect_send();
-    size_t receive_blocking(MutableObserverPtr<unsigned char> buf);
-    size_t receive_nonblocking(MutableObserverPtr<unsigned char> buf);
-    size_t send_blocking(ImmutableObserverPtr<unsigned char> buf);
-    size_t send_nonblocking(ImmutableObserverPtr<unsigned char> buf);
+    size_t receive_blocking(MutableObserverPtr<unsigned char> buf, const size_t size);
+    size_t receive_nonblocking(MutableObserverPtr<unsigned char> buf, const size_t size);
+    size_t send_blocking(ImmutableObserverPtr<unsigned char> buf, const size_t size);
+    size_t send_nonblocking(ImmutableObserverPtr<unsigned char> buf, const size_t size);
 };
 
 Wrapper_AsioTcp::Wrapper_AsioTcp(const SocketInfo &socketInfo)
@@ -62,50 +70,50 @@ FixedObserverPtr<boost::asio::ip::tcp::socket> Wrapper_AsioTcp::get_socket()
     return FixedObserverPtr<boost::asio::ip::tcp::socket>{impl->socket.get()};
 }
 
-size_t Wrapper_AsioTcp::send(const unsigned char *const buf)
+size_t Wrapper_AsioTcp::recv(unsigned char* buf, size_t size)
 {
-    return send(ImmutableObserverPtr<unsigned char>{buf});
+    return recv(MutableObserverPtr<unsigned char>{buf}, size);
 }
 
-size_t Wrapper_AsioTcp::send(ImmutableObserverPtr<unsigned char> buf)
-{
-    size_t bytesSent{};
-    switch (socketInfo.properties)
-    {
-    case SocketProperties::tcp_send_blocking:
-        impl->send_blocking(buf);
-    case SocketProperties::tcp_send_nonblocking:
-        impl->send_nonblocking(buf);
-        break;
-    default:
-        // do nothing, shouldn't occur
-            break;
-    }
-    return bytesSent;
-}
-
-size_t Wrapper_AsioTcp::recv(unsigned char* buf)
-{
-    return recv(MutableObserverPtr<unsigned char>{buf});
-}
-
-size_t Wrapper_AsioTcp::recv(MutableObserverPtr<unsigned char> buf)
+size_t Wrapper_AsioTcp::recv(MutableObserverPtr<unsigned char> buf, size_t size) const
 {
     size_t bytesReceived{};
     switch (socketInfo.properties)
     {
     case SocketProperties::tcp_receive_blocking:
-        bytesReceived = impl->receive_blocking(buf);
+        bytesReceived = impl->receive_blocking(buf, capSize(size, socketInfo.bufferSize));
         break;
-    case SocketProperties::tcp_receive_nonblocking: {
-        bytesReceived = impl->receive_nonblocking(buf);
-    }
-    break;
+    case SocketProperties::tcp_receive_nonblocking:
+        bytesReceived = impl->receive_nonblocking(buf, capSize(size, socketInfo.bufferSize));
+        break;
     default:
         // do nothing, shouldn't occur
         break;
     }
     return bytesReceived;
+}
+
+size_t Wrapper_AsioTcp::send(const unsigned char *const buf, size_t size)
+{
+    return send(ImmutableObserverPtr<unsigned char>{buf}, size);
+}
+
+size_t Wrapper_AsioTcp::send(ImmutableObserverPtr<unsigned char> buf, size_t size)
+{
+    size_t bytesSent{};
+    switch (socketInfo.properties)
+    {
+    case SocketProperties::tcp_send_blocking:
+        bytesSent = impl->send_blocking(buf, capSize(size, socketInfo.bufferSize));
+        break;
+    case SocketProperties::tcp_send_nonblocking:
+        bytesSent = impl->send_nonblocking(buf, capSize(size, socketInfo.bufferSize));
+        break;
+    default:
+        // do nothing, shouldn't occur
+        break;
+    }
+    return bytesSent;
 }
 
 void Wrapper_AsioTcp::Impl::connect_receive()
@@ -114,8 +122,8 @@ void Wrapper_AsioTcp::Impl::connect_receive()
     const auto endpoint = resolver.resolve(tcpObserver->socketInfo.ip, std::to_string(tcpObserver->socketInfo.port));
     socket = std::make_unique<boost::asio::ip::tcp::socket>(tcpObserver->ioContext);
     boost::asio::connect(*(socket.get()), endpoint);
-    socket->non_blocking(SocketProperties::tcp_receive_nonblocking == tcpObserver->socketInfo.properties);
     // non-blocking AFTER connection makes it work, HUZZAHHHH!
+    socket->non_blocking(SocketProperties::tcp_receive_nonblocking == tcpObserver->socketInfo.properties);
 }
 
 void Wrapper_AsioTcp::Impl::connect_send()
@@ -125,17 +133,18 @@ void Wrapper_AsioTcp::Impl::connect_send()
     boost::asio::ip::tcp::acceptor acceptor{tcpObserver->ioContext, endpoint};
     socket = std::make_unique<boost::asio::ip::tcp::socket>(tcpObserver->ioContext);
     acceptor.accept(*(socket.get()));
+    socket->non_blocking(SocketProperties::tcp_send_nonblocking == tcpObserver->socketInfo.properties);
 }
 
-size_t Wrapper_AsioTcp::Impl::receive_blocking(MutableObserverPtr<unsigned char> buf)
+size_t Wrapper_AsioTcp::Impl::receive_blocking(MutableObserverPtr<unsigned char> buf, const size_t size)
 {
-        return boost::asio::read(*(socket.get()), boost::asio::buffer(buf.get(), tcpObserver->socketInfo.bufferSize));
+        return boost::asio::read(*(socket.get()), boost::asio::buffer(buf.get(), size));
 }
 
-size_t Wrapper_AsioTcp::Impl::receive_nonblocking(MutableObserverPtr<unsigned char> buf)
+size_t Wrapper_AsioTcp::Impl::receive_nonblocking(MutableObserverPtr<unsigned char> buf, const size_t size)
 {
     boost::system::error_code ec{};
-    auto bytesReceived = boost::asio::read(*(socket.get()), boost::asio::buffer(buf.get(), tcpObserver->socketInfo.bufferSize), ec);
+    auto bytesReceived = boost::asio::read(*(socket.get()), boost::asio::buffer(buf.get(), size), ec);
 
     // maybe need error handling code
     if (ec == boost::asio::error::would_block || ec == boost::asio::error::try_again)
@@ -147,7 +156,7 @@ size_t Wrapper_AsioTcp::Impl::receive_nonblocking(MutableObserverPtr<unsigned ch
     else if (ec)
     {
         // Some other error occurred — handle it
-        std::cerr << "Socket read error: " << ec.message() << "\n";
+        std::cerr << "TCP Receive (nonblocking) error: " << ec.message() << std::endl;
     }
     else
     {
@@ -156,12 +165,28 @@ size_t Wrapper_AsioTcp::Impl::receive_nonblocking(MutableObserverPtr<unsigned ch
     return bytesReceived;
 }
 
-size_t Wrapper_AsioTcp::Impl::send_blocking(ImmutableObserverPtr<unsigned char> buf)
+size_t Wrapper_AsioTcp::Impl::send_blocking(ImmutableObserverPtr<unsigned char> buf, const size_t size)
 {
-    return boost::asio::write(*socket, boost::asio::buffer(buf.get(), tcpObserver->socketInfo.bufferSize));
+    return boost::asio::write(*socket, boost::asio::buffer(buf.get(), size));
 }
 
-size_t Wrapper_AsioTcp::Impl::send_nonblocking(ImmutableObserverPtr<unsigned char> buf)
+size_t Wrapper_AsioTcp::Impl::send_nonblocking(ImmutableObserverPtr<unsigned char> buf, const size_t size)
 {
+    boost::system::error_code ec {};
+    auto bytesSent = boost::asio::write(*(socket.get()), boost::asio::buffer(buf.get(), size), ec);
 
+    if (ec == boost::asio::error::would_block)
+    {
+        // Partial write - track bytesSent, retry later
+    }
+    else if (ec)
+    {
+        // Handle other errors
+        std::cerr << "TCP Send (nonblocking) error: " << ec.message() << std::endl;
+    }
+    else
+    {
+        // All data sent successfully
+    }
+    return bytesSent;
 }

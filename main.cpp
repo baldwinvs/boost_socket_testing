@@ -30,7 +30,7 @@ int main() {
     const SocketInfo transmitInfo {address, port, SocketType::udp, false, false, bufSize};
     const SocketInfo receiveInfo {address, port, SocketType::udp, true, true, bufSize};
 
-    TransmitSocketThread tx(transmitInfo, std::chrono::milliseconds{16});
+    TransmitSocketThread tx(transmitInfo, std::chrono::milliseconds{1});
     CustomReceiverSocket rx(receiveInfo);
 
     rx.start();
@@ -38,8 +38,9 @@ int main() {
 
     std::this_thread::sleep_for(std::chrono::seconds{1});
 
-    tx.stop();
+    // Making the receiving thread stop first prevents the thread from hanging when it is blocking.
     rx.stop();
+    tx.stop();
 
 	return 0;
 }

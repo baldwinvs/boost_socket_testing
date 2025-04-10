@@ -17,10 +17,10 @@ public:
     void connect();
     FixedObserverPtr<boost::asio::ip::tcp::socket> get_socket();
 
-    size_t send(const unsigned char* const buf) override;
-    size_t recv(unsigned char* buf) override;
-    size_t send(ImmutableObserverPtr<unsigned char> buf);
-    size_t recv(MutableObserverPtr<unsigned char> buf);
+    size_t recv(unsigned char* buf, size_t size) override;
+    size_t recv(MutableObserverPtr<unsigned char> buf, size_t size) const;
+    size_t send(const unsigned char* const buf, size_t size) override;
+    size_t send(ImmutableObserverPtr<unsigned char> buf, size_t size);
 
 private:
     struct Impl;
