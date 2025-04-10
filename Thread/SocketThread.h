@@ -8,12 +8,13 @@
 class SocketThread : public ThreadBase
 {
 public:
-    explicit SocketThread(const SocketInfo& socketInfo);
+    explicit SocketThread(const SocketInfo& info, const SocketProperties properties);
     ~SocketThread() override;
 
 protected:
     void createSocket();
-    const SocketInfo socketInfo;
+    const SocketInfo info;
+    const SocketProperties properties;
     std::unique_ptr<unsigned char[]> buf;
     std::unique_ptr<Base_AsioSocket> socket;
 };

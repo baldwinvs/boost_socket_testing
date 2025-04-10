@@ -23,23 +23,23 @@ enum class SocketProperties
     tcp_receive_nonblocking
 };
 
+constexpr SocketProperties determineSocketProperties(const SocketType type, const bool receiver, const bool non_blocking)
+{
+    //confusing but it works because each input represents 2 choices
+    return static_cast<SocketProperties>(static_cast<int>(type) << 2 | static_cast<int>(receiver) << 1 | static_cast<int>(non_blocking));
+}
+
 struct SocketInfo
 {
-    SocketInfo(const std::string& ip, const uint16_t port,
-        const SocketType type, const bool receiver, const bool non_blocking,
-        const uint32_t bufferSize)
+    SocketInfo(const std::string& ip, const uint16_t port, const uint32_t bufferSize)
     : ip {ip}
     , port {port}
     , bufferSize {bufferSize}
-    {
-        //confusing but it works because each input represents 2 choices
-        properties = static_cast<SocketProperties>(static_cast<int>(type) << 2 | static_cast<int>(receiver) << 1 | static_cast<int>(non_blocking));
-    }
+    {}
 
     std::string ip {};
     uint16_t port {};
     uint32_t bufferSize {};
-    SocketProperties properties {};
 };
 
 #endif //SOCKETINFO_H

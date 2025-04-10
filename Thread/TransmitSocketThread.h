@@ -9,8 +9,8 @@
 class TransmitSocketThread : public SocketThread
 {
 public:
-    TransmitSocketThread(const SocketInfo& socketInfo, const std::chrono::milliseconds sleep_time)
-        : SocketThread {socketInfo}
+    TransmitSocketThread(const SocketInfo& info, const SocketProperties properties, const std::chrono::milliseconds sleep_time)
+        : SocketThread {info, properties}
         , sleep_time {sleep_time}
     {}
 

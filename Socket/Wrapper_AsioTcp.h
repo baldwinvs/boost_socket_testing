@@ -11,7 +11,7 @@
 class Wrapper_AsioTcp : public Base_AsioSocket
 {
 public:
-    explicit Wrapper_AsioTcp(const SocketInfo& socketInfo);
+    explicit Wrapper_AsioTcp(const SocketInfo& info, const SocketProperties properties);
     ~Wrapper_AsioTcp();
 
     void connect();

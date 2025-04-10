@@ -37,8 +37,8 @@ struct Wrapper_AsioTcp::Impl
     size_t send_nonblocking(ImmutableObserverPtr<unsigned char> buf, const size_t size);
 };
 
-Wrapper_AsioTcp::Wrapper_AsioTcp(const SocketInfo &socketInfo)
-    : Base_AsioSocket(socketInfo), impl{std::make_unique<Impl>(this)}
+Wrapper_AsioTcp::Wrapper_AsioTcp(const SocketInfo &info, const SocketProperties properties)
+    : Base_AsioSocket(info, properties), impl{std::make_unique<Impl>(this)}
 {
     connect();
 }
@@ -47,7 +47,7 @@ Wrapper_AsioTcp::~Wrapper_AsioTcp() = default;
 
 void Wrapper_AsioTcp::connect()
 {
-    switch (socketInfo.properties)
+    switch (properties)
     {
     case SocketProperties::tcp_receive_blocking:
     case SocketProperties::tcp_receive_nonblocking: {
@@ -78,13 +78,13 @@ size_t Wrapper_AsioTcp::recv(unsigned char* buf, size_t size)
 size_t Wrapper_AsioTcp::recv(MutableObserverPtr<unsigned char> buf, size_t size) const
 {
     size_t bytesReceived{};
-    switch (socketInfo.properties)
+    switch (properties)
     {
     case SocketProperties::tcp_receive_blocking:
-        bytesReceived = impl->receive_blocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesReceived = impl->receive_blocking(buf, capSize(size, info.bufferSize));
         break;
     case SocketProperties::tcp_receive_nonblocking:
-        bytesReceived = impl->receive_nonblocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesReceived = impl->receive_nonblocking(buf, capSize(size, info.bufferSize));
         break;
     default:
         // do nothing, shouldn't occur
@@ -101,13 +101,13 @@ size_t Wrapper_AsioTcp::send(const unsigned char *const buf, size_t size)
 size_t Wrapper_AsioTcp::send(ImmutableObserverPtr<unsigned char> buf, size_t size)
 {
     size_t bytesSent{};
-    switch (socketInfo.properties)
+    switch (properties)
     {
     case SocketProperties::tcp_send_blocking:
-        bytesSent = impl->send_blocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesSent = impl->send_blocking(buf, capSize(size, info.bufferSize));
         break;
     case SocketProperties::tcp_send_nonblocking:
-        bytesSent = impl->send_nonblocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesSent = impl->send_nonblocking(buf, capSize(size, info.bufferSize));
         break;
     default:
         // do nothing, shouldn't occur
@@ -119,21 +119,21 @@ size_t Wrapper_AsioTcp::send(ImmutableObserverPtr<unsigned char> buf, size_t siz
 void Wrapper_AsioTcp::Impl::connect_receive()
 {
     boost::asio::ip::tcp::resolver resolver{tcpObserver->ioContext};
-    const auto endpoint = resolver.resolve(tcpObserver->socketInfo.ip, std::to_string(tcpObserver->socketInfo.port));
+    const auto endpoint = resolver.resolve(tcpObserver->info.ip, std::to_string(tcpObserver->info.port));
     socket = std::make_unique<boost::asio::ip::tcp::socket>(tcpObserver->ioContext);
     boost::asio::connect(*(socket.get()), endpoint);
     // non-blocking AFTER connection makes it work, HUZZAHHHH!
-    socket->non_blocking(SocketProperties::tcp_receive_nonblocking == tcpObserver->socketInfo.properties);
+    socket->non_blocking(SocketProperties::tcp_receive_nonblocking == tcpObserver->properties);
 }
 
 void Wrapper_AsioTcp::Impl::connect_send()
 {
-    const auto ip = boost::asio::ip::address::from_string(tcpObserver->socketInfo.ip);
-    const auto endpoint = boost::asio::ip::tcp::endpoint(ip, tcpObserver->socketInfo.port);
+    const auto ip = boost::asio::ip::address::from_string(tcpObserver->info.ip);
+    const auto endpoint = boost::asio::ip::tcp::endpoint(ip, tcpObserver->info.port);
     boost::asio::ip::tcp::acceptor acceptor{tcpObserver->ioContext, endpoint};
     socket = std::make_unique<boost::asio::ip::tcp::socket>(tcpObserver->ioContext);
     acceptor.accept(*(socket.get()));
-    socket->non_blocking(SocketProperties::tcp_send_nonblocking == tcpObserver->socketInfo.properties);
+    socket->non_blocking(SocketProperties::tcp_send_nonblocking == tcpObserver->properties);
 }
 
 size_t Wrapper_AsioTcp::Impl::receive_blocking(MutableObserverPtr<unsigned char> buf, const size_t size)

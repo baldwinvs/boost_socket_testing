@@ -13,14 +13,14 @@ struct Wrapper_AsioUdp::Impl
 {
     explicit Impl(Wrapper_AsioUdp *const udp)
         : udpObserver{udp}, socket{udpObserver->ioContext},
-          endpoint{boost::asio::ip::address::from_string(udpObserver->socketInfo.ip), udpObserver->socketInfo.port}
+          endpoint{boost::asio::ip::address::from_string(udpObserver->info.ip), udpObserver->info.port}
     {
         socket.open(boost::asio::ip::udp::v4());
-        switch (udpObserver->socketInfo.properties)
+        switch (udpObserver->properties)
         {
         case SocketProperties::udp_receive_blocking:
         case SocketProperties::udp_receive_nonblocking:
-            socket.non_blocking(SocketProperties::udp_receive_nonblocking == udpObserver->socketInfo.properties);
+            socket.non_blocking(SocketProperties::udp_receive_nonblocking == udpObserver->properties);
             socket.bind(endpoint);
             break;
         case SocketProperties::udp_send_nonblocking:
@@ -46,8 +46,8 @@ struct Wrapper_AsioUdp::Impl
     size_t send_nonblocking(ImmutableObserverPtr<unsigned char> buf, const size_t size);
 };
 
-Wrapper_AsioUdp::Wrapper_AsioUdp(const SocketInfo& socketInfo)
-    : Base_AsioSocket(socketInfo), impl{std::make_unique<Impl>(this)}
+Wrapper_AsioUdp::Wrapper_AsioUdp(const SocketInfo& info, const SocketProperties properties)
+    : Base_AsioSocket(info, properties), impl{std::make_unique<Impl>(this)}
 {}
 
 Wrapper_AsioUdp::~Wrapper_AsioUdp() = default;
@@ -65,13 +65,13 @@ size_t Wrapper_AsioUdp::recv(unsigned char* buf, size_t size)
 size_t Wrapper_AsioUdp::recv(MutableObserverPtr<unsigned char> buf, size_t size) const
 {
     size_t bytesReceived {};
-    switch (socketInfo.properties)
+    switch (properties)
     {
     case SocketProperties::udp_receive_blocking:
-        bytesReceived = impl->receive_blocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesReceived = impl->receive_blocking(buf, capSize(size, info.bufferSize));
         break;
     case SocketProperties::udp_receive_nonblocking:
-        bytesReceived = impl->receive_nonblocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesReceived = impl->receive_nonblocking(buf, capSize(size, info.bufferSize));
         break;
     default:
         // do nothing, shouldn't occur
@@ -88,13 +88,13 @@ size_t Wrapper_AsioUdp::send(const unsigned char* const buf, size_t size)
 size_t Wrapper_AsioUdp::send(ImmutableObserverPtr<unsigned char> buf, size_t size)
 {
     size_t bytesSent {};
-    switch (socketInfo.properties)
+    switch (properties)
     {
     case SocketProperties::udp_send_blocking:
-        bytesSent = impl->send_blocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesSent = impl->send_blocking(buf, capSize(size, info.bufferSize));
         break;
     case SocketProperties::udp_send_nonblocking:
-        bytesSent = impl->send_nonblocking(buf, capSize(size, socketInfo.bufferSize));
+        bytesSent = impl->send_nonblocking(buf, capSize(size, info.bufferSize));
         break;
     default:
         // do nothing, shouldn't occur

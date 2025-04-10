@@ -8,8 +8,8 @@
 class ReceiveSocketThread : public SocketThread
 {
 public:
-    explicit ReceiveSocketThread(const SocketInfo& socketInfo)
-        : SocketThread {socketInfo}
+    explicit ReceiveSocketThread(const SocketInfo& info, const SocketProperties properties)
+        : SocketThread {info, properties}
     {}
 
     ~ReceiveSocketThread() override;

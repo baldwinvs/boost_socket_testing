@@ -13,8 +13,8 @@ inline const std::string address {"127.0.0.1"};
 class CustomReceiverSocket : public ReceiveSocketThread
 {
 public:
-	CustomReceiverSocket(const SocketInfo& socketInfo)
-		: ReceiveSocketThread(socketInfo)
+	CustomReceiverSocket(const SocketInfo& info, const SocketProperties properties)
+		: ReceiveSocketThread(info, properties)
 	{}
 	~CustomReceiverSocket() override = default;
 
@@ -27,11 +27,13 @@ private:
 };
 
 int main() {
-    const SocketInfo transmitInfo {address, port, SocketType::udp, false, false, bufSize};
-    const SocketInfo receiveInfo {address, port, SocketType::udp, true, true, bufSize};
+    auto transmitSocketProperties = determineSocketProperties(SocketType::tcp, false, true);
+    auto receiveSocketProperties  = determineSocketProperties(SocketType::tcp, true, true);
+    const SocketInfo transmitInfo {address, port, bufSize};
+    const SocketInfo receiveInfo {address, port, bufSize};
 
-    TransmitSocketThread tx(transmitInfo, std::chrono::milliseconds{1});
-    CustomReceiverSocket rx(receiveInfo);
+    TransmitSocketThread tx(transmitInfo, transmitSocketProperties, std::chrono::milliseconds{1});
+    CustomReceiverSocket rx(receiveInfo, receiveSocketProperties);
 
     rx.start();
     tx.start();

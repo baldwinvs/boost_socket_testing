@@ -11,7 +11,7 @@
 class Wrapper_AsioUdp : public Base_AsioSocket
 {
 public:
-    explicit Wrapper_AsioUdp(const SocketInfo& socketInfo);
+    explicit Wrapper_AsioUdp(const SocketInfo& info, const SocketProperties properties);
     ~Wrapper_AsioUdp();
 
     FixedObserverPtr<boost::asio::ip::udp::socket> get_socket();

@@ -1,8 +1,7 @@
 #include "Base_AsioSocket.h"
 
-Base_AsioSocket::Base_AsioSocket(const SocketInfo &socketInfo)
+Base_AsioSocket::Base_AsioSocket(const SocketInfo &info, const SocketProperties properties)
     : ioContext {}
-    , socketInfo {socketInfo}
-{
-
-}
+    , info {info}
+    , properties {properties}
+{}

@@ -10,22 +10,22 @@ void TransmitSocketThread::run()
     std::memcpy(&buf[0], &data, sizeof(data));
 
     while (running) {
-        auto bytes = socket->send(buf.get(), socketInfo.bufferSize);
-        switch (socketInfo.properties)
+        auto bytes = socket->send(buf.get(), info.bufferSize);
+        switch (properties)
         {
         case SocketProperties::tcp_send_nonblocking:
-            while (bytes < socketInfo.bufferSize)
+            while (bytes < info.bufferSize)
             {
                 std::this_thread::yield();
-                bytes += socket->send(buf.get(), socketInfo.bufferSize - bytes);
+                bytes += socket->send(buf.get(), info.bufferSize - bytes);
             }
             break;
         case SocketProperties::udp_send_nonblocking:
             // Yield control of the hardware thread and try to send again.
-            while (bytes != socketInfo.bufferSize)
+            while (bytes != info.bufferSize)
             {
                 std::this_thread::yield();
-                bytes = socket->send(buf.get(), socketInfo.bufferSize);
+                bytes = socket->send(buf.get(), info.bufferSize);
             }
         default:
             // do nothing

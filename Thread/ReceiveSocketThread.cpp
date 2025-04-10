@@ -24,15 +24,15 @@ void ReceiveSocketThread::run()
     while (running) {
         //because the socket is created within this function, cannot stop the socket, or it's io_service
         //  doing it this way REQUIRE that the receiving socket is non-blocking.
-        auto bytes = socket->recv(buf.get(), socketInfo.bufferSize);
-        switch (socketInfo.properties)
+        auto bytes = socket->recv(buf.get(), info.bufferSize);
+        switch (properties)
         {
         case SocketProperties::tcp_receive_nonblocking:
             //need a sleep if non-blocking
             std::this_thread::sleep_for(std::chrono::microseconds(100));
-            while (bytes < socketInfo.bufferSize)
+            while (bytes < info.bufferSize)
             {
-                bytes += socket->recv(buf.get(), socketInfo.bufferSize - bytes);
+                bytes += socket->recv(buf.get(), info.bufferSize - bytes);
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
             //need a sleep if non-blocking
