@@ -33,3 +33,5 @@ target_link_libraries(boost_socket_testing PRIVATE
     Boost::system
     ws2_32
 )
+
+add_subdirectory(tests)
