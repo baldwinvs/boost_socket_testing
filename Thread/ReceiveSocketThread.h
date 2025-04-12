@@ -13,11 +13,14 @@ public:
     {}
 
     ~ReceiveSocketThread() override;
+    void set_nonblocking_poll_time(const std::chrono::milliseconds& poll_time_ms = std::chrono::milliseconds(0));
 protected:
     virtual void receiveCallback(const size_t bytes);
 
 private:
     void run() override;
+    void yield() const;
+    std::chrono::milliseconds poll_time_ms {};
 };
 
 #endif //RECEIVESOCKETTHREAD_H

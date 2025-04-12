@@ -29,17 +29,19 @@ void ReceiveSocketThread::run()
         {
         case SocketProperties::tcp_receive_nonblocking:
             //need a sleep if non-blocking
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            // std::this_thread::sleep_for(std::chrono::microseconds(100));
+            yield();
             while (bytes < info.bufferSize)
             {
                 bytes += socket->recv(buf.get(), info.bufferSize - bytes);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                yield();
             }
             //need a sleep if non-blocking
             break;
         case SocketProperties::udp_receive_nonblocking:
             //need a sleep if non-blocking
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            yield();
             break;
         default:
             // do nothing
@@ -50,4 +52,17 @@ void ReceiveSocketThread::run()
             receiveCallback(bytes);
         }
     }
+}
+
+void ReceiveSocketThread::set_nonblocking_poll_time(const std::chrono::milliseconds& poll_time_ms)
+{
+    this->poll_time_ms = poll_time_ms;
+}
+
+void ReceiveSocketThread::yield() const
+{
+    if (poll_time_ms == std::chrono::milliseconds(0))
+        std::this_thread::yield();
+    else if (poll_time_ms > std::chrono::milliseconds(0))
+        std::this_thread::sleep_for(poll_time_ms);
 }

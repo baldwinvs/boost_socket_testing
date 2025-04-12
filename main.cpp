@@ -36,6 +36,7 @@ int main()
 
     TransmitSocketThread tx(transmitInfo, transmitSocketProperties, std::chrono::milliseconds{1});
     CustomReceiverSocket rx(receiveInfo, receiveSocketProperties);
+    rx.set_nonblocking_poll_time(std::chrono::milliseconds{1});
 
     rx.start();
     tx.start();

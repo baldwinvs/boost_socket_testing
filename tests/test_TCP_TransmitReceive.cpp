@@ -57,6 +57,7 @@ Counts test_helper(const SocketInfo &transmitInfo, const SocketInfo &receiveInfo
 {
     TestTransmitterSocket tx(transmitInfo, transmitProperties, txPeriod);
     TestReceiverSocket rx(receiveInfo, receiveProperties);
+    rx.set_nonblocking_poll_time(std::chrono::milliseconds{1});
 
     rx.start();
     tx.start();
@@ -73,6 +74,11 @@ Counts test_helper(const SocketInfo &transmitInfo, const SocketInfo &receiveInfo
     rxtxCounts.transmit_count = tx.get_transmit_count();
 
     return rxtxCounts;
+}
+
+bool same_counts(const Counts counts)
+{
+    return counts.receive_count == counts.transmit_count;
 }
 } // namespace
 
@@ -91,10 +97,7 @@ SCENARIO("Transmit and Receive", "[TCP]")
         // Because the receive thread is stopped first, it may be off by one.
         THEN("The received message count is the same(ish) as the transmitted message count")
         {
-            const bool approximatelyTheSame{(counts.receive_count == counts.transmit_count) ||
-                                            (counts.receive_count == counts.transmit_count - 1) ||
-                                            (counts.receive_count == counts.transmit_count + 1)};
-            REQUIRE(approximatelyTheSame);
+            REQUIRE(same_counts(counts));
         }
     }
     GIVEN("A pair of TCP sockets that are nonblocking for both the receive and transmit threads")
@@ -106,9 +109,7 @@ SCENARIO("Transmit and Receive", "[TCP]")
         // Non-blocking seems to not do as good.
         THEN("The received message count will be less than the transmitted message count, but not too much")
         {
-            const bool probablyGood{(counts.receive_count > (counts.transmit_count / 2)) &&
-                                    (counts.receive_count <= counts.transmit_count)};
-            REQUIRE(probablyGood);
+            REQUIRE(same_counts(counts));
         }
     }
     GIVEN("A pair of TCP sockets that are blocking and nonblocking for the receive and transmit threads, respectively")
@@ -120,9 +121,7 @@ SCENARIO("Transmit and Receive", "[TCP]")
         // Non-blocking seems to not do as good.
         THEN("The received message count may be less than the transmitted message count, but not too much")
         {
-            const bool probablyGood{(counts.receive_count > (counts.transmit_count / 2)) &&
-                                    (counts.receive_count <= counts.transmit_count)};
-            REQUIRE(probablyGood);
+            REQUIRE(same_counts(counts));
         }
     }
     GIVEN("A pair of TCP sockets that are nonblocking and blocking for the receive and transmit threads, respectively")
@@ -134,9 +133,7 @@ SCENARIO("Transmit and Receive", "[TCP]")
         // Non-blocking seems to not do as good.
         THEN("The received message count will be less than the transmitted message count, but not too much")
         {
-            const bool probablyGood{(counts.receive_count > (counts.transmit_count / 2)) &&
-                                    (counts.receive_count <= counts.transmit_count)};
-            REQUIRE(probablyGood);
+            REQUIRE(same_counts(counts));
         }
     }
 }
