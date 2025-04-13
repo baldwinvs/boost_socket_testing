@@ -56,7 +56,16 @@ void ReceiveSocketThread::run()
 
 void ReceiveSocketThread::set_nonblocking_poll_time(const std::chrono::milliseconds& poll_time_ms)
 {
-    this->poll_time_ms = poll_time_ms;
+    switch (properties)
+    {
+    case SocketProperties::tcp_receive_nonblocking:
+    case SocketProperties::udp_receive_nonblocking:
+        this->poll_time_ms = poll_time_ms;
+        break;
+    default:
+        // do nothing
+        break;
+    }
 }
 
 void ReceiveSocketThread::yield() const

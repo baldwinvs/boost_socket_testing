@@ -4,15 +4,11 @@
 #include <iomanip>
 #include <string>
 
-#include "ReceiveSocketThread.h"
-#include "SocketInfo.h"
-#include "TransmitSocketThread.h"
+#include "test_TransmitReceive.h"
 
 namespace
 {
-constexpr uint16_t port{58585};
 constexpr size_t bufSize{16};
-inline const std::string address{"127.0.0.1"};
 
 class TestReceiverSocket : public ReceiveSocketThread
 {
@@ -44,96 +40,75 @@ class TestTransmitterSocket : public TransmitSocketThread
     size_t transmit_count{};
 };
 
-struct Counts
+class RunTest : public RunTest_Base<TestTransmitterSocket, TestReceiverSocket>
 {
-    size_t receive_count{};
-    size_t transmit_count{};
+private:
+    inline TestTransmitterSocket createTransmitThread(const SocketInfo &info, const SocketProperties properties) override
+    {
+        using namespace std::chrono_literals;
+        return TestTransmitterSocket{info, properties, 1ms};
+    }
+    inline TestReceiverSocket createReceiveThread(const SocketInfo &info, const SocketProperties properties) override
+    {
+        using namespace std::chrono_literals;
+        return TestReceiverSocket{info, properties};
+    }
 };
-
-// the purpose of this function was to avoid repeating code
-Counts test_helper(const SocketInfo &transmitInfo, const SocketInfo &receiveInfo,
-                   const SocketProperties transmitProperties, const SocketProperties receiveProperties,
-                   const std::chrono::milliseconds txPeriod)
-{
-    TestTransmitterSocket tx(transmitInfo, transmitProperties, txPeriod);
-    TestReceiverSocket rx(receiveInfo, receiveProperties);
-    rx.set_nonblocking_poll_time(std::chrono::milliseconds{1});
-
-    rx.start();
-    tx.start();
-
-    std::this_thread::sleep_for(std::chrono::seconds{1});
-
-    // Making the receiving thread stop first prevents the thread from hanging when it is blocking.
-    rx.stop();
-    tx.stop();
-
-    // get the transmit and receive counts
-    Counts rxtxCounts{};
-    rxtxCounts.receive_count = rx.get_receive_count();
-    rxtxCounts.transmit_count = tx.get_transmit_count();
-
-    return rxtxCounts;
-}
-
-bool same_counts(const Counts counts)
-{
-    return counts.receive_count == counts.transmit_count;
-}
 } // namespace
 
 SCENARIO("Transmit and Receive", "[TCP]")
 {
     using namespace std::chrono_literals;
-    const SocketInfo transmitInfo{address, port, bufSize};
-    const SocketInfo receiveInfo{address, port, bufSize};
+    const SocketInfo transmitInfo{"127.0.0.1", 58585, bufSize};
+    const SocketInfo receiveInfo{"127.0.0.1", 58585, bufSize};
+    RunTest runTest;
 
     GIVEN("A pair of TCP sockets that are blocking for both the receive and transmit threads")
     {
         auto transmitProperties = determineSocketProperties(SocketType::tcp, false, false);
         auto receiveProperties = determineSocketProperties(SocketType::tcp, true, false);
-        auto counts = test_helper(transmitInfo, receiveInfo, transmitProperties, receiveProperties, 1ms);
+        auto counts = runTest(transmitInfo, transmitProperties, receiveInfo, receiveProperties);
 
         // Because the receive thread is stopped first, it may be off by one.
         THEN("The received message count is the same(ish) as the transmitted message count")
         {
-            REQUIRE(same_counts(counts));
+            REQUIRE(counts.same_counts());
         }
     }
     GIVEN("A pair of TCP sockets that are nonblocking for both the receive and transmit threads")
     {
         auto transmitProperties = determineSocketProperties(SocketType::tcp, false, true);
         auto receiveProperties = determineSocketProperties(SocketType::tcp, true, true);
-        auto counts = test_helper(transmitInfo, receiveInfo, transmitProperties, receiveProperties, 1ms);
+        auto counts = runTest(transmitInfo, transmitProperties, receiveInfo, receiveProperties);
 
         // Non-blocking seems to not do as good.
         THEN("The received message count will be less than the transmitted message count, but not too much")
         {
-            REQUIRE(same_counts(counts));
+            REQUIRE(counts.same_counts());
         }
     }
     GIVEN("A pair of TCP sockets that are blocking and nonblocking for the receive and transmit threads, respectively")
     {
         auto transmitProperties = determineSocketProperties(SocketType::tcp, false, true);
         auto receiveProperties = determineSocketProperties(SocketType::tcp, true, false);
-        auto counts = test_helper(transmitInfo, receiveInfo, transmitProperties, receiveProperties, 1ms);
+        auto counts = runTest(transmitInfo, transmitProperties, receiveInfo, receiveProperties);
 
         // Non-blocking seems to not do as good.
         THEN("The received message count may be less than the transmitted message count, but not too much")
         {
-            REQUIRE(same_counts(counts));
+            REQUIRE(counts.same_counts());
         }
     }
     GIVEN("A pair of TCP sockets that are nonblocking and blocking for the receive and transmit threads, respectively")
     {
         auto transmitProperties = determineSocketProperties(SocketType::tcp, false, false);
         auto receiveProperties = determineSocketProperties(SocketType::tcp, true, true);
-        auto counts = test_helper(transmitInfo, receiveInfo, transmitProperties, receiveProperties, 1ms);
+        auto counts = runTest(transmitInfo, transmitProperties, receiveInfo, receiveProperties);
 
         // Non-blocking seems to not do as good.
         THEN("The received message count will be less than the transmitted message count, but not too much")
         {
-            REQUIRE(same_counts(counts));
+            REQUIRE(counts.same_counts());
         }
     }
 }

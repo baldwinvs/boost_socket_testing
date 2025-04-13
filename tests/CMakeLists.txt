@@ -29,6 +29,7 @@ add_executable(${target}
     ${base_dir}/Socket/Wrapper_AsioTcp.cpp
     ${base_dir}/Socket/Base_AsioSocket.cpp
     test_main.cpp
+    test_TransmitReceive.h
 )
 
 target_include_directories(${target} PUBLIC
