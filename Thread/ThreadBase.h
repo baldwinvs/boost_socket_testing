@@ -9,8 +9,8 @@ public:
     ThreadBase() : running{false} {};
     virtual ~ThreadBase();
 
-    void start();
-    void stop();
+    virtual void start();
+    virtual void stop();
 protected:
     std::atomic_bool running;
     virtual void run() = 0;

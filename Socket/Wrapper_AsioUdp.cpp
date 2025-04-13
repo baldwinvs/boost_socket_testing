@@ -34,7 +34,11 @@ struct Wrapper_AsioUdp::Impl
 
     ~Impl()
     {
-        socket.close();
+        if (socket.is_open())
+        {
+            // no shutdown for UDP
+            socket.close();
+        }
     }
     FixedObserverPtr<Wrapper_AsioUdp> udpObserver;
     boost::asio::ip::udp::socket socket;
@@ -51,12 +55,6 @@ Wrapper_AsioUdp::Wrapper_AsioUdp(const SocketInfo& info, const SocketProperties 
 {}
 
 Wrapper_AsioUdp::~Wrapper_AsioUdp() = default;
-
-FixedObserverPtr<boost::asio::ip::udp::socket> Wrapper_AsioUdp::get_socket()
-{
-    return FixedObserverPtr<boost::asio::ip::udp::udp::socket>{&impl->socket};
-}
-
 
 size_t Wrapper_AsioUdp::recv(unsigned char* buf, size_t size)
 {

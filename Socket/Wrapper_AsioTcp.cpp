@@ -21,7 +21,11 @@ struct Wrapper_AsioTcp::Impl
 
     ~Impl()
     {
-        socket->close();
+        if (socket->is_open())
+        {
+            socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            socket->close();
+        }
     }
     // The socket is a pointer because it can't be properly initialized until
     // the body of the constructor (or later?)
@@ -31,6 +35,7 @@ struct Wrapper_AsioTcp::Impl
     FixedObserverPtr<Wrapper_AsioTcp> tcpObserver;
     void connect_receive();
     void connect_send();
+
     size_t receive_blocking(MutableObserverPtr<unsigned char> buf, const size_t size);
     size_t receive_nonblocking(MutableObserverPtr<unsigned char> buf, const size_t size);
     size_t send_blocking(ImmutableObserverPtr<unsigned char> buf, const size_t size);
@@ -63,11 +68,6 @@ void Wrapper_AsioTcp::connect()
         // do nothing, shouldn't occur
         break;
     }
-}
-
-FixedObserverPtr<boost::asio::ip::tcp::socket> Wrapper_AsioTcp::get_socket()
-{
-    return FixedObserverPtr<boost::asio::ip::tcp::socket>{impl->socket.get()};
 }
 
 size_t Wrapper_AsioTcp::recv(unsigned char* buf, size_t size)

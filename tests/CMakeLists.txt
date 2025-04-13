@@ -20,7 +20,7 @@ FetchContent_MakeAvailable(catch2)
 set(base_dir "${CMAKE_SOURCE_DIR}")
 message("cwd = ${base_dir}")
 add_executable(${target}
-    test_TCP_TransmitReceive.cpp
+    test_main.cpp
     ${base_dir}/Thread/ThreadBase.cpp
     ${base_dir}/Thread/ReceiveSocketThread.cpp
     ${base_dir}/Thread/TransmitSocketThread.cpp
@@ -28,8 +28,8 @@ add_executable(${target}
     ${base_dir}/Thread/SocketThread.cpp
     ${base_dir}/Socket/Wrapper_AsioTcp.cpp
     ${base_dir}/Socket/Base_AsioSocket.cpp
-    test_main.cpp
-    test_TransmitReceive.h
+    test_TCP_TransmitReceive.cpp
+    test_UDP_TransmitReceive.cpp
 )
 
 target_include_directories(${target} PUBLIC
