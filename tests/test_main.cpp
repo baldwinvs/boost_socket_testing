@@ -14,8 +14,9 @@ int main(int argc, char* argv[]) {
     session.run();
 
     configData = {};
-    configData.showDurations = Catch::ShowDurations::Always; // show test durations
+    // configData.showDurations = Catch::ShowDurations::Always; // show test durations
     configData.verbosity = Catch::Verbosity::High;
+    configData.showSuccessfulTests = true;
 
     // Do any setup here (e.g. global init, logging)
     std::cout << "== Running Catch2 tests ==" << std::endl;

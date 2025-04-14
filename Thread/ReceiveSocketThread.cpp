@@ -20,6 +20,7 @@ void ReceiveSocketThread::receiveCallback(const size_t bytes)
 
 void ReceiveSocketThread::run()
 {
+    using namespace std::chrono_literals;
     createSocket();
     while (running) {
         //because the socket is created within this function, cannot stop the socket, or it's io_service
@@ -28,20 +29,17 @@ void ReceiveSocketThread::run()
         switch (properties)
         {
         case SocketProperties::tcp_receive_nonblocking:
-            //need a sleep if non-blocking
-            // std::this_thread::sleep_for(std::chrono::microseconds(100));
-            yield();
             while (bytes < info.bufferSize)
             {
-                bytes += socket->recv(buf.get(), info.bufferSize - bytes);
-                // std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 yield();
+                bytes += socket->recv(buf.get(), info.bufferSize - bytes);
             }
             //need a sleep if non-blocking
+            std::this_thread::sleep_for(1ms);
             break;
         case SocketProperties::udp_receive_nonblocking:
             //need a sleep if non-blocking
-            yield();
+            std::this_thread::sleep_for(1ms);
             break;
         default:
             // do nothing

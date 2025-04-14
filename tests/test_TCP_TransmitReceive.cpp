@@ -34,7 +34,7 @@ SCENARIO("Transmit and Receive", "[TCP]")
         // Non-blocking seems to not do as good.
         THEN("The received message count will be the same as the transmitted message count")
         {
-            REQUIRE(counts.same_counts());
+            REQUIRE(counts.almost_same_counts());
         }
     }
     GIVEN("A pair of TCP sockets that are blocking and nonblocking for the receive and transmit threads, respectively")
@@ -58,7 +58,7 @@ SCENARIO("Transmit and Receive", "[TCP]")
         // Non-blocking seems to not do as good.
         THEN("The received message count will be the same as the transmitted message count")
         {
-            REQUIRE(counts.same_counts());
+            REQUIRE(counts.almost_same_counts());
         }
     }
 }

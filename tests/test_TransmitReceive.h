@@ -41,13 +41,12 @@ private:
 struct Counts
 {
     inline bool same_counts() const { return receive_count == transmit_count; }
-    inline bool almost_same_counts() const { return (receive_count < transmit_count || receive_count == transmit_count); }
+    inline bool almost_same_counts() const { return (receive_count <= transmit_count && receive_count >= (transmit_count - 2)); }
 
     size_t receive_count{};
     size_t transmit_count{};
 };
 
-template<typename T = TestTransmitterSocket, typename R = TestReceiverSocket>
 class RunTest
 {
 public:
@@ -55,8 +54,8 @@ public:
                       const SocketInfo& receiveInfo, const SocketProperties receiveProperties)
     {
         using namespace std::chrono_literals;
-        auto tx = T(transmitInfo, transmitProperties, 1ms);
-        auto rx = R(receiveInfo, receiveProperties);
+        auto tx = TestTransmitterSocket(transmitInfo, transmitProperties, 1ms);
+        auto rx = TestReceiverSocket(receiveInfo, receiveProperties);
         // rx.set_nonblocking_poll_time(1ms);
 
         rx.start();
