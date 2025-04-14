@@ -14,8 +14,6 @@ public:
     explicit Wrapper_AsioUdp(const SocketInfo& info, const SocketProperties properties);
     ~Wrapper_AsioUdp();
 
-    FixedObserverPtr<boost::asio::ip::udp::socket> get_socket();
-
     size_t recv(unsigned char* buf, size_t size) override;
     size_t recv(MutableObserverPtr<unsigned char> buf, size_t size) const;
     size_t send(const unsigned char* const buf, size_t size) override;

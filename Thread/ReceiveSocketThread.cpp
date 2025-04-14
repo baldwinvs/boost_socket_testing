@@ -20,6 +20,7 @@ void ReceiveSocketThread::receiveCallback(const size_t bytes)
 
 void ReceiveSocketThread::run()
 {
+    using namespace std::chrono_literals;
     createSocket();
     while (running) {
         //because the socket is created within this function, cannot stop the socket, or it's io_service
@@ -28,18 +29,17 @@ void ReceiveSocketThread::run()
         switch (properties)
         {
         case SocketProperties::tcp_receive_nonblocking:
-            //need a sleep if non-blocking
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
             while (bytes < info.bufferSize)
             {
+                yield();
                 bytes += socket->recv(buf.get(), info.bufferSize - bytes);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
             //need a sleep if non-blocking
+            std::this_thread::sleep_for(1ms);
             break;
         case SocketProperties::udp_receive_nonblocking:
             //need a sleep if non-blocking
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            std::this_thread::sleep_for(1ms);
             break;
         default:
             // do nothing
@@ -50,4 +50,26 @@ void ReceiveSocketThread::run()
             receiveCallback(bytes);
         }
     }
+}
+
+void ReceiveSocketThread::set_nonblocking_poll_time(const std::chrono::milliseconds& poll_time_ms)
+{
+    switch (properties)
+    {
+    case SocketProperties::tcp_receive_nonblocking:
+    case SocketProperties::udp_receive_nonblocking:
+        this->poll_time_ms = poll_time_ms;
+        break;
+    default:
+        // do nothing
+        break;
+    }
+}
+
+void ReceiveSocketThread::yield() const
+{
+    if (poll_time_ms == std::chrono::milliseconds(0))
+        std::this_thread::yield();
+    else if (poll_time_ms > std::chrono::milliseconds(0))
+        std::this_thread::sleep_for(poll_time_ms);
 }

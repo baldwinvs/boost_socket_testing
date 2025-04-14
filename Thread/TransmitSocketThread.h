@@ -15,6 +15,8 @@ public:
     {}
 
     ~TransmitSocketThread() override = default;
+protected:
+    virtual void transmitCallback(const size_t bytes);
 
 private:
     void run() override;

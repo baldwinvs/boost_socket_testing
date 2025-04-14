@@ -1,6 +1,12 @@
 #include "TransmitSocketThread.h"
+#include <iostream>
 
 #include "../Socket/Wrapper_AsioUdp.h"
+
+void TransmitSocketThread::transmitCallback(const size_t bytes)
+{
+    std::cout << "transmitted " << bytes << " bytes" << std::endl;
+}
 
 void TransmitSocketThread::run()
 {
@@ -31,6 +37,12 @@ void TransmitSocketThread::run()
             // do nothing
             break;
         }
+
+        if (bytes > 0)
+        {
+            transmitCallback(bytes);
+        }
+
         std::this_thread::sleep_for(sleep_time);
     }
 }
